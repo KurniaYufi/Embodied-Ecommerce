@@ -1,26 +1,275 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+ * Design tokens. Storefront components use the semantic names (paper, ink,
+ * muted, line…) so the Appearance setting can swap the whole palette.
+ * ------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f5f3ef;
+  --surface: #fbfaf8;
+  --sunken: #ebe8e2;
+  --ink: #1a1917;
+  --ink-soft: #3d3a35;
+  --muted: #66625b;
+  --subtle: #8c877f;
+  --line: #e1ddd5;
+  --line-strong: #c8c2b8;
+  --danger: #b42318;
+  --danger-soft: #fbeae8;
+  --success: #2c6a3a;
+  --success-soft: #e6f1e8;
+  --warning: #8a5300;
+  --warning-soft: #fbf0dc;
+  --info: #1f4f86;
+  --info-soft: #e5edf7;
+  color-scheme: light;
+}
+
+.dark {
+  --paper: #131211;
+  --surface: #1c1b19;
+  --sunken: #262421;
+  --ink: #f3f0ea;
+  --ink-soft: #d9d4cb;
+  --muted: #aaa49a;
+  --subtle: #8a847a;
+  --line: #2e2c28;
+  --line-strong: #4a463f;
+  --danger: #f2877c;
+  --danger-soft: #3a1d1a;
+  --success: #8fcf9c;
+  --success-soft: #1b2e1f;
+  --warning: #f0c06a;
+  --warning-soft: #33280f;
+  --info: #9cc1ef;
+  --info-soft: #18263a;
+  color-scheme: dark;
+}
+
+@theme {
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant-garamond), ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-marquee: var(--font-cormorant-garamond), ui-serif, Georgia, Cambria, serif;
+
+  --color-cream: #f5f3ef;
+
+  --color-accent: var(--color-neutral-800);
+  --color-accent-content: var(--color-neutral-800);
+  --color-accent-foreground: var(--color-white);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --color-accent: var(--color-white);
+  --color-accent-content: var(--color-white);
+  --color-accent-foreground: var(--color-neutral-800);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+section[id] {
+  scroll-margin-top: 6rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Components
+ * ------------------------------------------------------------------------- */
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-10;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-medium tracking-[0.24em] text-muted uppercase;
+  }
+
+  .display {
+    @apply font-serif font-medium tracking-tight text-ink;
+  }
+
+  .btn {
+    @apply inline-flex h-12 items-center justify-center gap-2 px-7 text-[12px] font-medium tracking-[0.16em] whitespace-nowrap uppercase transition-[background-color,color,border-color,opacity] duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply h-10 px-5 text-[11px];
+  }
+  .btn-primary {
+    @apply bg-ink text-paper hover:bg-ink-soft active:bg-ink;
+  }
+  .btn-secondary {
+    @apply border border-ink bg-transparent text-ink hover:bg-ink hover:text-paper;
+  }
+  .btn-quiet {
+    @apply border border-line-strong bg-surface text-ink hover:border-ink;
+  }
+  .btn-danger {
+    @apply bg-danger text-white hover:opacity-90 dark:text-neutral-950;
+  }
+  .btn-on-dark {
+    @apply bg-white text-neutral-900 hover:bg-neutral-200;
+  }
+  .btn-outline-on-dark {
+    @apply border border-white/80 text-white hover:bg-white hover:text-neutral-900;
+  }
+
+  .icon-btn {
+    @apply relative inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 hover:bg-ink/5;
+  }
+  [data-tone="light"] .icon-btn:hover {
+    @apply bg-white/10;
+  }
+
+  .link {
+    @apply underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink;
+  }
+
+  .label {
+    @apply mb-1.5 block text-[13px] font-medium text-ink;
+  }
+  .input {
+    @apply block h-11 w-full border border-line-strong bg-surface px-3.5 text-[15px] text-ink transition-colors placeholder:text-subtle hover:border-muted focus:border-ink focus:ring-1 focus:ring-ink focus:outline-none disabled:opacity-60 aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger sm:text-sm;
+  }
+  textarea.input {
+    @apply h-auto py-2.5 leading-relaxed;
+  }
+  .field-error {
+    @apply mt-1.5 text-[13px] text-danger;
+  }
+  .field-hint {
+    @apply mt-1.5 text-[13px] text-muted;
+  }
+
+  .alert {
+    @apply border px-4 py-3 text-sm;
+  }
+  .alert-danger {
+    @apply border-danger/30 bg-danger-soft text-danger;
+  }
+  .alert-success {
+    @apply border-success/30 bg-success-soft text-success;
+  }
+  .alert-warning {
+    @apply border-warning/30 bg-warning-soft text-warning;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-1 text-[10px] leading-none font-medium tracking-[0.12em] whitespace-nowrap uppercase;
+  }
+  .badge-neutral {
+    @apply bg-sunken text-ink-soft;
+  }
+  .badge-warning {
+    @apply bg-warning-soft text-warning;
+  }
+  .badge-info {
+    @apply bg-info-soft text-info;
+  }
+  .badge-success {
+    @apply bg-success-soft text-success;
+  }
+  .badge-danger {
+    @apply bg-danger-soft text-danger;
+  }
+
+  .card {
+    @apply border border-line bg-surface;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Motion
+ * ------------------------------------------------------------------------- */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 240ms ease-out both;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--sunken) 25%, var(--line) 50%, var(--sunken) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-marquee {
+    animation: none;
+  }
 }

@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  customer
+}
+
+enum OrderStatus {
+  pending_payment
+  awaiting_confirmation
+  paid
+  shipped
+  completed
+  cancelled
+}
+
+enum PaymentMethodType {
+  bank
+  qris
+}
+
+model PasswordResetToken {
+  email     String   @id
+  token     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  name            String
+  email           String    @unique
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  password        String
+  role            UserRole  @default(customer)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  orders  Order[]
+  reviews Review[]
+
+  @@map("users")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Size {
+  id        Int      @id @default(autoincrement())
+  label     String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products ProductSize[]
+
+  @@map("sizes")
+}
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  categoryId   Int?     @map("category_id")
+  slug         String   @unique
+  name         String
+  description  String
+  price        Int
+  gradient     String
+  stock        Int      @default(0)
+  image        String?
+  isBestseller Boolean  @default(false) @map("is_bestseller")
+  isNew        Boolean  @default(false) @map("is_new")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  category   Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  sizes      ProductSize[]
+  reviews    Review[]
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model ProductSize {
+  id        Int @id @default(autoincrement())
+  productId Int @map("product_id")
+  sizeId    Int @map("size_id")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size    Size    @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, sizeId])
+  @@map("product_size")
+}
+
+model Order {
+  id                      Int           @id @default(autoincrement())
+  userId                  Int?          @map("user_id")
+  number                  String        @unique
+  accessToken             String        @unique @map("access_token")
+  customerName            String        @map("customer_name")
+  customerPhone           String        @map("customer_phone")
+  shippingAddress         String        @map("shipping_address")
+  notes                   String?
+  subtotal                Int
+  status                  OrderStatus   @default(pending_payment)
+  paymentMethodId         Int?          @map("payment_method_id")
+  paymentProofPath        String?       @map("payment_proof_path")
+  paymentProofUploadedAt  DateTime?     @map("payment_proof_uploaded_at")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
+
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  items         OrderItem[]
+  reviews       Review[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int      @map("order_id")
+  productId   Int?     @map("product_id")
+  productName String   @map("product_name")
+  size        String?
+  price       Int
+  quantity    Int
+  gradient    String
+  image       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+model PaymentMethod {
+  id            Int               @id @default(autoincrement())
+  type          PaymentMethodType
+  name          String
+  accountName   String?           @map("account_name")
+  accountNumber String?           @map("account_number")
+  imagePath     String?           @map("image_path")
+  isActive      Boolean           @default(true) @map("is_active")
+  sortOrder     Int               @default(0) @map("sort_order")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@map("payment_methods")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  productId Int      @map("product_id")
+  orderId   Int?     @map("order_id")
+  rating    Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, productId])
+  @@map("reviews")
+}
