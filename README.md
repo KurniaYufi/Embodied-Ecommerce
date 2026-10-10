@@ -9,7 +9,7 @@ Postgres, no shared Vercel project.
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS v4
 - Prisma ORM + PostgreSQL
 - Auth.js (NextAuth v5) with credentials login, role-based access (`admin` / `customer`)
-- Local filesystem uploads (`public/uploads`) for product photos, payment method images, and payment proofs
+- Uploads (product photos, payment method images, payment proofs): Vercel Blob when deployed, `public/uploads` locally
 - Server Actions for all mutations (checkout, reviews, admin CRUD, settings)
 
 ## First-time setup
@@ -62,8 +62,31 @@ Postgres, no shared Vercel project.
 
 ## Notes
 
-- File uploads are stored locally under `public/uploads/{products,payment-methods,payment-proofs}` — no
-  external storage/CDN required for development.
+- Without `BLOB_READ_WRITE_TOKEN`, uploads are stored locally under
+  `public/uploads/{products,payment-methods,payment-proofs}` — no external storage needed for development.
 - Password reset doesn't send real email; `/forgot-password` generates a token and shows the reset link
   directly on the page (dev-friendly stand-in for an email provider).
-- Not connected to any Vercel project. Deploy wherever you like with your own `DATABASE_URL`/`AUTH_SECRET`.
+
+## Deploying to Vercel
+
+The Vercel project `embodied-ecommerce` builds from the `main` branch of the GitHub repo. Every build runs
+`npm run vercel-build` (`prisma migrate deploy && next build`), so pending migrations are applied automatically.
+
+Required project environment variables:
+
+| Variable                | Source                                                                 |
+|-------------------------|------------------------------------------------------------------------|
+| `DATABASE_URL`          | Neon integration (Storage → Neon), pooled connection                    |
+| `DATABASE_URL_UNPOOLED` | Neon integration, direct connection used by migrations                  |
+| `AUTH_SECRET`           | Set manually (`npx auth secret`)                                        |
+| `BLOB_READ_WRITE_TOKEN` | Blob store `embodied-ecommerce-blob`, connected to the project          |
+| `NEXT_PUBLIC_APP_NAME`  | Set manually (`Embodied`)                                               |
+
+`NEXTAUTH_URL` is not needed on Vercel — Auth.js detects the host automatically.
+
+To seed a fresh production database once, pull the env and run the seeder locally:
+
+```bash
+npx vercel env pull .env.production.local --environment=production
+npx dotenv-cli -e .env.production.local -- npm run db:seed
+```
